@@ -10,17 +10,17 @@ venv\Scripts\activate (mac)
 
 pip install django
 pip install pandas
-pip install openxml
+pip install openpyxl
 
 cd admin_dasboard
 
 python manage.py runserver
 
+python manage.py createsuperuser
+python manage.py makemigrations
+python manage.py migrate
  ```
 
  Then go to link
  http://127.0.0.1:8000/admin
 
- Credentials
- kashisethia
- ks@123
