@@ -8,19 +8,14 @@ python3 -m venv venv
 source venv/bin/activate (mac)
 venv\Scripts\activate (mac)
 
-pip install django
-pip install pandas
-pip install openpyxl
+pip install -r requirements.txt
 
-cd admin_dasboard
+cd flask_webapp
 
-python manage.py runserver
+python flask_app.py
 
-python manage.py createsuperuser
-python manage.py makemigrations
-python manage.py migrate
- ```
+streamlit run streamlit_ui.py
 
- Then go to link
- http://127.0.0.1:8000/admin
+```
+
 

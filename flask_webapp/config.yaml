@@ -1,0 +1,17 @@
+credentials:
+  usernames:
+    admin:
+      email: admin@gmail.com
+      name: Admin
+      password: abc # To be replaced with hashed password
+    teacher:
+      email: teacher@gmail.com
+      name: Teacher
+      password: def # To be replaced with hashed password
+cookie:
+  expiry_days: 30
+  key: random_signature_key # Must be string
+  name: random_cookie_name
+preauthorized:
+  emails:
+  - admin@gmail.com
