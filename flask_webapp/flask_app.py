@@ -35,18 +35,19 @@ class Student(Base):
     student_id = Column(String(100), primary_key=True)
     password = Column(String(100), default='student_login')
     course_enrolled = Column(String(100))
+    attendance = Column(Integer)
     last_name = Column(String(100))
     first_name = Column(String(100))
     preferred_name = Column(String(100))
-    notes = Column(String, nullable=True)
 
 class StudentClass(Base):
     __tablename__ = 'student_class'
     id = Column(Integer, primary_key=True, autoincrement=True)
     student_id = Column(String(100), ForeignKey('student.student_id'), nullable=False)
+    notes = Column(String, nullable=True)
+    date = Column(Date)
     class_name = Column(String(100), ForeignKey('class.class_name'), nullable=False)
     trainer_name = Column(String(100), ForeignKey('teacher.teacher_name'), nullable=False)
-    start_time = Column(Time)
     morning_break_status = Column(String(20))
     morning_break_hours = Column(Float)
     lunch_break_status = Column(String(20))
