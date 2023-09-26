@@ -58,5 +58,6 @@ class StudentClass(Base):
     final_session_hours = Column(Float)
     total_class_hours = Column(Float)
 
+
 # Create the database tables
 Base.metadata.create_all(engine)
