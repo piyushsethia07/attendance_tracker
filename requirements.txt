@@ -3,3 +3,4 @@ flask
 pandas
 sqlalchemy
 openpyxl
+streamlit-option-menu
