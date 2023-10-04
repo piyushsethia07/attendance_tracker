@@ -7,6 +7,7 @@ from flask_app import Class, Teacher, ClassSchedule, Student, StudentClass
 from datetime import datetime
 import pandas as pd
 import os
+from auth_help import login_user
 from test import add_class_schedule, add_data_after_reading_csv_file, add_student, add_class_history
 
 UPLOAD_FOLDER = "uploads"
@@ -19,35 +20,58 @@ session = Session()
 # Streamlit UI
 st.sidebar.title("Database Management")
 
+st.session_state['admin'] = False
+
 # Sidebar
 with st.sidebar:
-    selected_option = option_menu("Main Menu", ["Add Teacher", "Add Class", "Upload Excel", "Add Students", "Class History"], 
+    selected_option = option_menu("Main Menu", ["Home", "Login", "Add Teacher", "Add Class", "Upload Excel", "Add Students", "Class History"], 
         icons=[], menu_icon="cast", default_index=1)
+    
+
+if selected_option == 'Login':
+    with st.form(key='Auth-form'):
+        username = st.text_input("Username")
+        password = st.text_input("Password", type="password")
+        submit_button = st.form_submit_button("Login")
+    
+    if submit_button:
+        if username.lower() == 'admin' and password.lower() == 'admin_password':
+            st.session_state['admin'] = True
+            selected_option = "Upload Excel"
+        else:
+            if login_user(username, password) is not None:
+                selected_option = "Upload Excel"
+            else:
+                st.warning('Wrong username or password')
 
 if selected_option == "Add Teacher":
 
-    with st.expander("Add Teacher"):
+    if st.session_state['admin'] == False:
+        st.warning(''' Teachers can't access this page ''')
+    
+    else:
+        with st.expander("Add Teacher"):
 
-        teacher_name = st.text_input("Teacher Name")
-        teacher_password = st.text_input("Teacher Password")
-        
-        if st.button("Add Teacher"):
-            if teacher_name:
-                teacher_record = session.query(Teacher).filter_by(teacher_name=teacher_name).first()
-                if not teacher_record:
-                    new_teacher = Teacher(teacher_name=teacher_name, password=teacher_password)
-                    session.add(new_teacher)
-                    session.commit()
-                    st.success(f"Teacher '{teacher_name}' added successfully")
-                else:
-                    st.warning(f"Teacher '{teacher_name}' already exists")
-    teachers = session.query(Teacher).all()
-    teacher_names = [teacher.teacher_name for teacher in teachers]
-    teacher_passwords = [teacher.password for teacher in teachers]
-    teacher_df = pd.DataFrame({'Teacher Name': teacher_names, 'Password': teacher_passwords})
-    if teacher_df.shape[0] > 0:
-        st.header("Teachers in the system:")
-        st.dataframe(teacher_df)
+            teacher_name = st.text_input("Teacher Name")
+            teacher_password = st.text_input("Teacher Password")
+            
+            if st.button("Add Teacher"):
+                if teacher_name:
+                    teacher_record = session.query(Teacher).filter_by(teacher_name=teacher_name).first()
+                    if not teacher_record:
+                        new_teacher = Teacher(teacher_name=teacher_name, password=teacher_password)
+                        session.add(new_teacher)
+                        session.commit()
+                        st.success(f"Teacher '{teacher_name}' added successfully")
+                    else:
+                        st.warning(f"Teacher '{teacher_name}' already exists")
+        teachers = session.query(Teacher).all()
+        teacher_names = [teacher.teacher_name for teacher in teachers]
+        teacher_passwords = [teacher.password for teacher in teachers]
+        teacher_df = pd.DataFrame({'Teacher Name': teacher_names, 'Password': teacher_passwords})
+        if teacher_df.shape[0] > 0:
+            st.header("Teachers in the system:")
+            st.dataframe(teacher_df)
 
 elif selected_option == "Add Class":
 
