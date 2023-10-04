@@ -8,9 +8,59 @@ from datetime import datetime
 import pandas as pd
 import os
 from auth_help import login_user
-from test import add_class_schedule, add_data_after_reading_csv_file, add_student, add_class_history
+from test import add_class_schedule, add_data_after_reading_csv_file, add_student, add_class_history, calculate_break_hours
 
 UPLOAD_FOLDER = "uploads"
+
+# Function to query data based on student name, class name, and trainer
+def query_database(student_name, class_name, trainer_name):
+    try:
+        # Query the database based on the provided criteria
+        student_class = session.query(StudentClass).filter_by(
+            student_id=student_name,
+            class_name=class_name,
+            trainer_name=trainer_name
+        ).first()
+        
+        return student_class
+    except Exception as e:
+        st.error(f"Error querying the database: {str(e)}")
+        return None
+
+# Function to update data in the database
+def update_data_in_database(
+    student_class,
+    new_notes,
+    new_morning_break_status,
+    new_lunch_break_status,
+    new_tea_break_status,
+    new_final_session_status,
+):
+    try:
+        if student_class:
+            
+
+            # Update the fields in the student_class object
+            student_class.notes = new_notes
+            student_class.morning_break_status = new_morning_break_status
+            student_class.morning_break_hours = calculate_break_hours(new_morning_break_status)
+            student_class.lunch_break_status = new_lunch_break_status
+            student_class.lunch_break_hours = calculate_break_hours(new_lunch_break_status)
+            student_class.tea_break_status = new_tea_break_status
+            student_class.tea_break_hours = calculate_break_hours(new_tea_break_status)
+            student_class.final_session_status = new_final_session_status
+            student_class.final_session_hours = calculate_break_hours(new_final_session_status)
+            student_class.total_class_hours = student_class.morning_break_hours + student_class.lunch_break_hours + student_class.tea_break_hours + student_class.final_session_hours
+
+            # Commit the changes to the database
+            session.commit()
+
+            st.success("Data updated successfully.")
+        else:
+            st.warning("Data not found for the provided input.")
+    except Exception as e:
+        st.error(f"Error updating data in the database: {str(e)}")
+
 
 # Create a SQLAlchemy engine and session
 engine = create_engine('sqlite:///myapp.db')  # Replace with your SQLite database URI
@@ -24,7 +74,7 @@ st.session_state['admin'] = False
 
 # Sidebar
 with st.sidebar:
-    selected_option = option_menu("Main Menu", ["Home", "Login", "Add Teacher", "Add Class", "Upload Excel", "Add Students", "Class History"], 
+    selected_option = option_menu("Main Menu", ["Home", "Login", "Add Teacher", "Add Class", "Upload Excel", "Add Students", "Class History", "Edit Class Details"], 
         icons=[], menu_icon="cast", default_index=1)
     
 
@@ -194,5 +244,91 @@ if selected_option == "Class History":
 
     # Display the filtered DataFrame in Streamlit
     st.write(df)
+
+if selected_option == "Edit Class Details":
+    st.title("Edit Data")
+
+    # Create input fields for student name, class name, and trainer name
+    student_name = st.text_input("Student ID")
+    class_name = st.text_input("Class Name")
+    trainer_name = st.text_input("Trainer Name")
+
+    if student_name and class_name and trainer_name:
+        # Query the database based on user input
+        student_class = query_database(student_name, class_name, trainer_name)
+
+        data = {
+            'Student ID': [student_class.student_id],
+            'Notes': [student_class.notes],
+            'Date': [student_class.date],
+            'Class Name': [student_class.class_name],
+            'Trainer Name': [student_class.trainer_name],
+            'Morning Break Status': [student_class.morning_break_status],
+            'Morning Break Hours': [student_class.morning_break_hours],
+            'Lunch Break Status': [student_class.lunch_break_status],
+            'Lunch Break Hours': [student_class.lunch_break_hours],
+            'Tea Break Status': [student_class.tea_break_status],
+            'Tea Break Hours': [student_class.tea_break_hours],
+            'Final Session Status': [student_class.final_session_status],
+            'Final Session Hours': [student_class.final_session_hours],
+            'Total Class Hours': [student_class.total_class_hours]
+        }
+
+
+        # Convert the list of dictionaries to a Pandas DataFrame
+        df = pd.DataFrame(data)
+        st.write(df)
+
+        if student_class:
+            # Display the editable fields
+
+            break_status_options = ["Present", "Absent", "Late_15_mins", "Late_30_mins", "Late_45_mins", "Late_60_mins"]
+
+
+            st.header("Edit Fields")
+            
+            # Create input fields for various fields
+            new_notes = st.text_input("Notes", student_class.notes)
+            new_morning_break_status = st.selectbox(f"Morning Break Status", break_status_options)
+            new_lunch_break_status = st.selectbox("Lunch Break Status", break_status_options)
+            new_tea_break_status = st.selectbox("Tea Break Status", break_status_options)
+            new_final_session_status = st.selectbox("Final Session Status", break_status_options)
+
+            # Add a button to update data
+            if st.button("Update Data"):
+                # Update the database with the new data
+                update_data_in_database(
+                    student_class,
+                    new_notes,
+                    new_morning_break_status,
+                    new_lunch_break_status,
+                    new_tea_break_status,
+                    new_final_session_status
+                )
+                student_class = query_database(student_name, class_name, trainer_name)
+
+                data = {
+                    'Student ID': [student_class.student_id],
+                    'Notes': [student_class.notes],
+                    'Date': [student_class.date],
+                    'Class Name': [student_class.class_name],
+                    'Trainer Name': [student_class.trainer_name],
+                    'Morning Break Status': [student_class.morning_break_status],
+                    'Morning Break Hours': [student_class.morning_break_hours],
+                    'Lunch Break Status': [student_class.lunch_break_status],
+                    'Lunch Break Hours': [student_class.lunch_break_hours],
+                    'Tea Break Status': [student_class.tea_break_status],
+                    'Tea Break Hours': [student_class.tea_break_hours],
+                    'Final Session Status': [student_class.final_session_status],
+                    'Final Session Hours': [student_class.final_session_hours],
+                    'Total Class Hours': [student_class.total_class_hours]
+                }
+
+
+                # Convert the list of dictionaries to a Pandas DataFrame
+                df = pd.DataFrame(data)
+                st.write(df)
+        else:
+            st.warning("Data not found for the provided input.")
 
 

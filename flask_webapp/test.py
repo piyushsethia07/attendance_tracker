@@ -178,3 +178,20 @@ def add_class_history(metadata, df):
 
     return "Class History Added Successfully"
 
+
+def calculate_break_hours(status):
+    if status == "Present":
+        return 2.0
+    elif status == "Absent":
+        return 0.0
+    elif status == "Late_15_mins":
+        return 1.75
+    elif status == "Late_30_mins":
+        return 1.5
+    elif status == "Late_45_mins":
+        return 1.25
+    elif status == "Late_60_mins":
+        return 1.0
+    else:
+        # Handle unknown status
+        return 0.0  #
