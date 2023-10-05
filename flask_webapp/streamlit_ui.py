@@ -241,7 +241,7 @@ if selected_option == "Add Students":
     }
 
     df = pd.DataFrame(data)
-
+    df = df.dropna(subset=['First Name'])
     # Display the DataFrame in Streamlit
     st.write(df)
 
@@ -290,7 +290,6 @@ if selected_option == "Class History":
         elif filter_option == "Student Name":
             selected_value = st.text_input("Enter Student Name")
             df = df[df["Student ID"].str.contains(selected_value, case=False, na=False)]
-
     # Display the filtered DataFrame in Streamlit
     st.write(df)
 
@@ -328,6 +327,7 @@ if selected_option == "Edit Class Details":
 
         # Convert the list of dictionaries to a Pandas DataFrame
         df = pd.DataFrame(data)
+        df = df.dropna(subset=['Total Class Hours'])
         st.write(df)
 
         if student_class:
@@ -389,6 +389,7 @@ if selected_option == 'Teacher Dashboard':
         student_id = st.text_input('Enter student id','All Students')
         submitted_techer_dashboard = st.form_submit_button('Analyse')
     if submitted_techer_dashboard:
+        total_classes = session.query(ClassSchedule).filter_by(trainer_name=teacher_name).count()
         today = datetime.today().date()
         upcoming_classes = session.query(ClassSchedule).filter_by(trainer_name=teacher_name).filter(ClassSchedule.date >= today).all()
         class_data = []
@@ -409,12 +410,37 @@ if selected_option == 'Teacher Dashboard':
             st.pyplot(fig)
         else:
             st.write('No Upcoming classes')
+        if student_id == 'All Students':
+            all_students = session.query(Student).all()
+            attendance_percentage_data = {"Student": [], "Present": [], "Absent": [], "Late_15_mins": [], "Late_30_mins": [], "Late_45_mins": [], "Late_60_mins": []}
 
-        
+            for student in all_students:
+                student_id = student.student_id
+                student_name = f"{student.first_name} {student.last_name}"
+                student_data = {
+                    "Student": student_name,
+                    "Present": session.query(StudentClass).filter_by(student_id=student_id, trainer_name=teacher_name, morning_break_status="Present").count() + session.query(StudentClass).filter_by(student_id=student_id, trainer_name=teacher_name, tea_break_status="Present").count() + session.query(StudentClass).filter_by(student_id=student_id, trainer_name=teacher_name, lunch_break_status="Present").count() + session.query(StudentClass).filter_by(student_id=student_id, trainer_name=teacher_name, final_session_status="Present").count(),
+                    "Absent": session.query(StudentClass).filter_by(student_id=student_id, trainer_name=teacher_name, morning_break_status="Absent").count() + session.query(StudentClass).filter_by(student_id=student_id, trainer_name=teacher_name, tea_break_status="Absent").count() + session.query(StudentClass).filter_by(student_id=student_id, trainer_name=teacher_name, lunch_break_status="Absent").count() + session.query(StudentClass).filter_by(student_id=student_id, trainer_name=teacher_name, final_session_status="Absent").count(),
+                    "Late_15_mins": session.query(StudentClass).filter_by(student_id=student_id, trainer_name=teacher_name, morning_break_status="Late_15_mins").count() + session.query(StudentClass).filter_by(student_id=student_id, trainer_name=teacher_name, tea_break_status="Late_15_mins").count() + session.query(StudentClass).filter_by(student_id=student_id, trainer_name=teacher_name, lunch_break_status="Late_15_mins").count() + session.query(StudentClass).filter_by(student_id=student_id, trainer_name=teacher_name, final_session_status="Late_15_mins").count(),
+                    "Late_30_mins": session.query(StudentClass).filter_by(student_id=student_id, trainer_name=teacher_name, morning_break_status="Late_30_mins").count() + session.query(StudentClass).filter_by(student_id=student_id, trainer_name=teacher_name, tea_break_status="Late_30_mins").count() + session.query(StudentClass).filter_by(student_id=student_id, trainer_name=teacher_name, lunch_break_status="Late_30_mins").count() + session.query(StudentClass).filter_by(student_id=student_id, trainer_name=teacher_name, final_session_status="Late_30_mins").count(),
+                    "Late_45_mins": session.query(StudentClass).filter_by(student_id=student_id, trainer_name=teacher_name, morning_break_status="Late_45_mins").count() + session.query(StudentClass).filter_by(student_id=student_id, trainer_name=teacher_name, tea_break_status="Late_45_mins").count() + session.query(StudentClass).filter_by(student_id=student_id, trainer_name=teacher_name, lunch_break_status="Late_45_mins").count() + session.query(StudentClass).filter_by(student_id=student_id, trainer_name=teacher_name, final_session_status="Late_45_mins").count(),
+                    "Late_60_mins": session.query(StudentClass).filter_by(student_id=student_id, trainer_name=teacher_name, morning_break_status="Late_60_mins").count() + session.query(StudentClass).filter_by(student_id=student_id, trainer_name=teacher_name, tea_break_status="Late_60_mins").count() + session.query(StudentClass).filter_by(student_id=student_id, trainer_name=teacher_name, lunch_break_status="Late_60_mins").count() + session.query(StudentClass).filter_by(student_id=student_id, trainer_name=teacher_name, final_session_status="Late_60_mins").count(),
+                }
+                attendance_percentage_data["Student"].append(student_name)
+                for key in student_data.keys():
+                    if key == 'Student':
+                        continue
+                    attendance_percentage_data[key].append((student_data[key] / total_classes) * 100)
+
+            # Create a bar chart for attendance percentages for all students
+            st.subheader("Attendance Percentage for All Students")
+            df_attendance_percentage = pd.DataFrame(attendance_percentage_data)
+            df_attendance_percentage.set_index("Student", inplace=True)
+            st.bar_chart(df_attendance_percentage)
+
         # Calculate the percentage of classes attended by the student
-        total_classes = session.query(ClassSchedule).filter_by(trainer_name=teacher_name).count()
         attended_classes = session.query(StudentClass).filter_by(student_id=student_id, trainer_name=teacher_name).count()
-        if attended_classes:
+        if attended_classes>0 and student_id != 'All Students':
 
             # Calculate attendance status distribution
             attendance_data = {
@@ -426,18 +452,9 @@ if selected_option == 'Teacher Dashboard':
                 "Late_60_mins": session.query(StudentClass).filter_by(student_id=student_id, trainer_name=teacher_name, morning_break_status="Late_60_mins").count() + session.query(StudentClass).filter_by(student_id=student_id, trainer_name=teacher_name, tea_break_status="Late_60_mins").count() + session.query(StudentClass).filter_by(student_id=student_id, trainer_name=teacher_name, lunch_break_status="Late_60_mins").count() + session.query(StudentClass).filter_by(student_id=student_id, trainer_name=teacher_name, final_session_status="Late_60_mins").count(),
             }
 
-            # Create a pie chart for attendance percentage
-            st.header("Student Attendance Overview")
-            st.subheader("Percentage of Classes Attended")
-            fig1, ax1 = plt.subplots()
-            ax1.pie([attended_classes, total_classes - attended_classes], labels=["Attended", "Missed"], autopct='%1.1f%%', startangle=90)
-            ax1.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
-            st.pyplot(fig1)
-
             # Create a pie chart for attendance status distribution
             st.subheader("Attendance Status Distribution")
             fig2, ax2 = plt.subplots()
             ax2.pie(attendance_data.values(), labels=attendance_data.keys(), autopct='%1.1f%%', startangle=90)
             ax2.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
             st.pyplot(fig2)
-
