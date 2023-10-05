@@ -88,7 +88,7 @@ def login():
   password = st.text_input('Password', type='password')
 
   # Validate the user's credentials
-  if username == 'alice' and password == 'password123':
+  if username.lower() == 'admin' and password.lower() == 'admin_password':
     st.session_state['authentication_status'] = True
   else:
     st.error('Invalid username or password.')
