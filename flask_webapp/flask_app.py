@@ -15,6 +15,12 @@ class Class(Base):
     class_id = Column(Integer, primary_key=True, autoincrement=True)
     class_name = Column(String(100))
 
+
+class Module(Base):
+    __tablename__ = 'module'
+    module_id = Column(Integer, primary_key=True, autoincrement=True)
+    module_name = Column(String(100))
+
 class Teacher(Base):
     __tablename__ = 'teacher'
     teacher_id = Column(Integer, primary_key=True, autoincrement=True)
@@ -25,7 +31,7 @@ class ClassSchedule(Base):
     __tablename__ = 'class_schedule'
     schedule_id = Column(Integer, primary_key=True, autoincrement=True)
     date = Column(Date)
-    module = Column(String(100))
+    module = Column(String(100), ForeignKey('module.module_name'), nullable=False)
     class_name = Column(String(100), ForeignKey('class.class_name'), nullable=False)
     trainer_name = Column(String(100), ForeignKey('teacher.teacher_name'), nullable=False)
     class_total = Column(Integer)
@@ -48,6 +54,7 @@ class StudentClass(Base):
     date = Column(Date)
     class_name = Column(String(100), ForeignKey('class.class_name'), nullable=False)
     trainer_name = Column(String(100), ForeignKey('teacher.teacher_name'), nullable=False)
+    module_name = Column(String(100), ForeignKey('module.module_name'), nullable=False)
     morning_break_status = Column(String(20))
     morning_break_hours = Column(Float)
     lunch_break_status = Column(String(20))

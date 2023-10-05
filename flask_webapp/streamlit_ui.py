@@ -1,6 +1,7 @@
 import streamlit as st
 from sqlalchemy import create_engine
 from streamlit_option_menu import option_menu
+import streamlit_authenticator as stauth
 import streamlit.components.v1 as html
 from sqlalchemy.orm import sessionmaker
 import matplotlib.pyplot as plt
@@ -8,19 +9,33 @@ from flask_app import Class, Teacher, ClassSchedule, Student, StudentClass
 from datetime import datetime
 import pandas as pd
 import os
+import yaml
+from yaml.loader import SafeLoader
 from auth_help import login_user
 from test import add_class_schedule, add_data_after_reading_csv_file, add_student, add_class_history, calculate_break_hours
 
 UPLOAD_FOLDER = "uploads"
 
+with open('config.yaml') as file:
+    config = yaml.load(file, Loader=SafeLoader)
+
+authenticator = stauth.Authenticate(
+    config['credentials'],
+    config['cookie']['name'],
+    config['cookie']['key'],
+    config['cookie']['expiry_days'],
+    config['preauthorized']
+)
+
 # Function to query data based on student name, class name, and trainer
-def query_database(student_name, class_name, trainer_name):
+def query_database(student_name, class_name, trainer_name, module_name):
     try:
         # Query the database based on the provided criteria
         student_class = session.query(StudentClass).filter_by(
             student_id=student_name,
             class_name=class_name,
-            trainer_name=trainer_name
+            trainer_name=trainer_name,
+            module_name=module_name
         ).first()
         
         return student_class
@@ -241,6 +256,7 @@ if selected_option == "Class History":
         'Date': [student_class.date for student_class in class_history_db],
         'Class Name': [student_class.class_name for student_class in class_history_db],
         'Trainer Name': [student_class.trainer_name for student_class in class_history_db],
+        'Module Name': [student_class.module_name for student_class in class_history_db],
         'Morning Break Status': [student_class.morning_break_status for student_class in class_history_db],
         'Morning Break Hours': [student_class.morning_break_hours for student_class in class_history_db],
         'Lunch Break Status': [student_class.lunch_break_status for student_class in class_history_db],
@@ -257,7 +273,7 @@ if selected_option == "Class History":
     df = pd.DataFrame(data)
 
     with st.expander("Filter Options"):
-        filter_option = st.selectbox("Filter by", [None, "Date", "Trainer", "Class", "Student Name"])
+        filter_option = st.selectbox("Filter by", [None, "Date", "Trainer", "Class", "Student Name", "Module Name"])
 
         if filter_option == "Date":
             selected_value = st.date_input("Select Date", min_value=df["Date"].min(), max_value=df["Date"].max())
@@ -265,6 +281,9 @@ if selected_option == "Class History":
         elif filter_option == "Trainer":
             selected_value = st.text_input("Enter Trainer Name")
             df = df[df["Trainer Name"].str.contains(selected_value, case=False, na=False)]
+        elif filter_option == "Module Name":
+            selected_value = st.text_input("Enter Module Name")
+            df = df[df["Module Name"].str.contains(selected_value, case=False, na=False)]
         elif filter_option == "Class":
             selected_value = st.text_input("Enter Class Name")
             df = df[df["Class Name"].str.contains(selected_value, case=False, na=False)]
@@ -282,10 +301,11 @@ if selected_option == "Edit Class Details":
     student_name = st.text_input("Student ID")
     class_name = st.text_input("Class Name")
     trainer_name = st.text_input("Trainer Name")
+    module_name = st.text_input("Module Name")
 
     if student_name and class_name and trainer_name:
         # Query the database based on user input
-        student_class = query_database(student_name, class_name, trainer_name)
+        student_class = query_database(student_name, class_name, trainer_name, module_name)
 
         data = {
             'Student ID': [student_class.student_id],
@@ -293,6 +313,7 @@ if selected_option == "Edit Class Details":
             'Date': [student_class.date],
             'Class Name': [student_class.class_name],
             'Trainer Name': [student_class.trainer_name],
+            'Module Name': [student_class.module_name],
             'Morning Break Status': [student_class.morning_break_status],
             'Morning Break Hours': [student_class.morning_break_hours],
             'Lunch Break Status': [student_class.lunch_break_status],
@@ -335,7 +356,7 @@ if selected_option == "Edit Class Details":
                     new_tea_break_status,
                     new_final_session_status
                 )
-                student_class = query_database(student_name, class_name, trainer_name)
+                student_class = query_database(student_name, class_name, trainer_name, module_name)
 
                 data = {
                     'Student ID': [student_class.student_id],
@@ -343,6 +364,7 @@ if selected_option == "Edit Class Details":
                     'Date': [student_class.date],
                     'Class Name': [student_class.class_name],
                     'Trainer Name': [student_class.trainer_name],
+                    'Module Name': [student_class.module_name],
                     'Morning Break Status': [student_class.morning_break_status],
                     'Morning Break Hours': [student_class.morning_break_hours],
                     'Lunch Break Status': [student_class.lunch_break_status],

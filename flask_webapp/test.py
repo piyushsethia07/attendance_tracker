@@ -1,5 +1,5 @@
 from sqlalchemy import create_engine
-from flask_app import Class, ClassSchedule, Teacher, Student, StudentClass
+from flask_app import Class, ClassSchedule, Teacher, Student, StudentClass, Module
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
@@ -80,6 +80,16 @@ def add_teacher(data):
         return f"{data['trainer']} added successfully"
     else:
         return f"Teacher with {data['trainer']}  already exists"
+    
+def add_module(data):
+    new_teacher = session.query(Module).filter_by(module_name=data['module']).first()
+    if not new_teacher:
+        new_teacher = Module(module_name=data['module'])
+        session.add(new_teacher)
+        session.commit()
+        return f"{data['module']} added successfully"
+    else:
+        return f"Module with {data['module']}  already exists"
 
 # Function to add data to the ClassSchedule table
 def add_class_schedule(data):
@@ -104,6 +114,7 @@ def add_class_schedule(data):
     else:
         add_class(data)
         add_teacher(data)
+        add_module(data)
         class_record = session.query(Class).filter_by(class_name=class_name).first()
         teacher_record = session.query(Teacher).filter_by(teacher_name=trainer_name).first()
         new_class_schedule = ClassSchedule(
@@ -161,6 +172,7 @@ def add_class_history(metadata, df):
                     date=parsed_date,
                     class_name=metadata['class'],
                     trainer_name=metadata['trainer'],
+                    module_name=metadata['module'],
                     morning_break_status=row['9:00 AM - 11:00 AM'],
                     morning_break_hours=row['Morning Break\n(11:00 AM- 11:15 AM)'],
                     lunch_break_status=row['11:15 AM - 1:15 PM'],
