@@ -75,7 +75,7 @@ st.session_state['admin'] = True
 
 # Sidebar
 with st.sidebar:
-    selected_option = option_menu("Main Menu", ["Login", "Add Teacher", "Add Class", "Upload Excel", "Add Students", "Class History", "Edit Class Details", "Teacher Dashboard"] , 
+    selected_option = option_menu("Main Menu", ["Login", "Add Class", "Upload Excel", "Add Students", "Class History", "Teacher Dashboard"] , 
         icons=[], menu_icon="cast", default_index=1)
     
 
