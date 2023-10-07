@@ -18,4 +18,13 @@ streamlit run streamlit_ui.py
 
 ```
 
+Admin creds
+Admin
+admin_password
 
+
+```
+streamlit run teachers_streamlit_ui.py
+```
+Teacher creds
+default_password
