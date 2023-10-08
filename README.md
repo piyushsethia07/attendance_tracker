@@ -2,6 +2,8 @@
 
 python3 should be installed on system
 
+remember one thing open code in new browser window only
+
 ``` 
 python3 -m venv venv
 
