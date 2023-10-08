@@ -5,4 +5,4 @@ sqlalchemy
 openpyxl
 streamlit-option-menu
 matplotlib
-streamlit_authenticator
+streamlit-authenticator
