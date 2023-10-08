@@ -74,8 +74,8 @@ session = Session()
 import pickle
 from pathlib import Path
 
-names = ["Admin", "admin"]
-usernames = ["Admin", "admin"]
+names = ["Admin", "admin", "teacher"]
+usernames = ["Admin", "admin", "teacher"]
 
 # load hashed passwords
 file_path = Path(__file__).parent / "hashed_pw.pkl"
