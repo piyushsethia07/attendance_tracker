@@ -9,23 +9,10 @@ from flask_app import Class, Teacher, ClassSchedule, Student, StudentClass
 from datetime import datetime
 import pandas as pd
 import os
-import yaml
-from yaml.loader import SafeLoader
 from auth_help import login_user
 from test import add_class_schedule, add_data_after_reading_csv_file, add_student, add_class_history, calculate_break_hours
 
 UPLOAD_FOLDER = "uploads"
-
-with open('config.yaml') as file:
-    config = yaml.load(file, Loader=SafeLoader)
-
-authenticator = stauth.Authenticate(
-    config['credentials'],
-    config['cookie']['name'],
-    config['cookie']['key'],
-    config['cookie']['expiry_days'],
-    config['preauthorized']
-)
 
 # Function to query data based on student name, class name, and trainer
 def query_database(student_name, class_name, trainer_name, module_name):
@@ -83,21 +70,31 @@ engine = create_engine('sqlite:///myapp.db')  # Replace with your SQLite databas
 Session = sessionmaker(bind=engine)
 session = Session()
 
-def login():
-  username = st.text_input('Username')
-  password = st.text_input('Password', type='password')
 
-  # Validate the user's credentials
-  if username.lower() == 'admin' and password.lower() == 'admin_password':
-    st.session_state['authentication_status'] = True
-  else:
-    st.error('Invalid username or password.')
+import pickle
+from pathlib import Path
 
-if not st.session_state.get('authentication_status'):
-  login()
-else:
+names = ["Admin", "admin"]
+usernames = ["Admin", "admin"]
 
-    # Streamlit UI
+# load hashed passwords
+file_path = Path(__file__).parent / "hashed_pw.pkl"
+with file_path.open("rb") as file:
+    hashed_passwords = pickle.load(file)
+
+
+authenticator = stauth.Authenticate(names, usernames, hashed_passwords,
+    "sales_dashboard", "abcdef", cookie_expiry_days=30)
+
+name, authentication_status, username = authenticator.login("Login", "main")
+
+if authentication_status == False:
+    st.error("Username/password is incorrect")
+
+if authentication_status == None:
+    st.warning("Please enter your username and password")
+
+if authentication_status == True:
     st.sidebar.title("Admin Database Management")
 
     st.session_state['admin'] = True
@@ -475,3 +472,4 @@ else:
                     st.pyplot(fig2)
             except:
                 pass
+

@@ -14,6 +14,8 @@ cd flask_webapp
 
 python flask_app.py
 
+python dump_pass.py
+
 streamlit run streamlit_ui.py
 
 ```
@@ -27,4 +29,5 @@ admin_password
 streamlit run teachers_streamlit_ui.py
 ```
 Teacher creds
-default_password
+teacher
+teacher_password
