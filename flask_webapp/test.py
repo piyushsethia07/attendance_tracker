@@ -95,38 +95,42 @@ def add_module(data):
 def add_class_schedule(data):
     class_name = data['class']
     trainer_name = data['trainer']
+    module_name = data['module_name']
     parsed_date = datetime.strptime(data['date'], '%m/%d/%Y').date()
-    # Query the Class and Teacher tables to get their corresponding IDs
-    class_record = session.query(Class).filter_by(class_name=class_name).first()
-    teacher_record = session.query(Teacher).filter_by(teacher_name=trainer_name).first()
 
-    if class_record and teacher_record:
-        new_class_schedule = ClassSchedule(
-            date=parsed_date,
-            module=data['module'],
-            class_name=class_record.class_name,
-            trainer_name=teacher_record.teacher_name,
-            class_total=data['class total']
-        )
-        session.add(new_class_schedule)
-        session.commit()
-        return "Success"
-    else:
-        add_class(data)
-        add_teacher(data)
-        add_module(data)
+    class_schedule_record = session.query(ClassSchedule).filter_by(module=module_name, class_name=class_name,trainer_name=trainer_name).first()
+    if not class_schedule_record:
+        # Query the Class and Teacher tables to get their corresponding IDs
         class_record = session.query(Class).filter_by(class_name=class_name).first()
         teacher_record = session.query(Teacher).filter_by(teacher_name=trainer_name).first()
-        new_class_schedule = ClassSchedule(
-            date=parsed_date,
-            module=data['module'],
-            class_name=class_record.class_name,
-            trainer_name=teacher_record.teacher_name,
-            class_total=data['class total']
-        )
-        session.add(new_class_schedule)
-        session.commit()
-        return ("Class or Teacher not found in the database. Added to database and then class schedule updated")
+
+        if class_record and teacher_record:
+            new_class_schedule = ClassSchedule(
+                date=parsed_date,
+                module=data['module'],
+                class_name=class_record.class_name,
+                trainer_name=teacher_record.teacher_name,
+                class_total=data['class total']
+            )
+            session.add(new_class_schedule)
+            session.commit()
+            return "Success"
+        else:
+            add_class(data)
+            add_teacher(data)
+            add_module(data)
+            class_record = session.query(Class).filter_by(class_name=class_name).first()
+            teacher_record = session.query(Teacher).filter_by(teacher_name=trainer_name).first()
+            new_class_schedule = ClassSchedule(
+                date=parsed_date,
+                module=data['module'],
+                class_name=class_record.class_name,
+                trainer_name=teacher_record.teacher_name,
+                class_total=data['class total']
+            )
+            session.add(new_class_schedule)
+            session.commit()
+            return ("Class or Teacher not found in the database. Added to database and then class schedule updated")
 
 def add_student(df):
     # Loop through the rows of your DataFrame and insert or update each row in the 'student' table

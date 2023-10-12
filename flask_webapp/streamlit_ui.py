@@ -313,7 +313,7 @@ if authentication_status == True:
         trainer_name = st.text_input("Trainer Name")
         module_name = st.text_input("Module Name")
 
-        if student_name and class_name and trainer_name:
+        if student_name and class_name and trainer_name and module_name:
             # Query the database based on user input
             student_class = query_database(student_name, class_name, trainer_name, module_name)
 
