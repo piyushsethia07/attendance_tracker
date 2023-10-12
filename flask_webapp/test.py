@@ -95,7 +95,7 @@ def add_module(data):
 def add_class_schedule(data):
     class_name = data['class']
     trainer_name = data['trainer']
-    module_name = data['module_name']
+    module_name = data['module']
     parsed_date = datetime.strptime(data['date'], '%m/%d/%Y').date()
 
     class_schedule_record = session.query(ClassSchedule).filter_by(module=module_name, class_name=class_name,trainer_name=trainer_name).first()
