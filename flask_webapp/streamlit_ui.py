@@ -86,7 +86,13 @@ with file_path.open("rb") as file:
 authenticator = stauth.Authenticate(names, usernames, hashed_passwords,
     "sales_dashboard", "abcdef", cookie_expiry_days=30)
 
-name, authentication_status, username = authenticator.login("Login", "main")
+st.session_state['name'] = None
+
+if not st.session_state['name']:
+    pass
+    # st.image("logo.jpeg", use_column_width=True)
+
+st.session_state.name, authentication_status, username = authenticator.login("Login", "main")
 
 if authentication_status == False:
     st.error("Username/password is incorrect")
@@ -284,24 +290,24 @@ if authentication_status == True:
         df = pd.DataFrame(data)
 
         with st.expander("Filter Options"):
-            filter_option = st.selectbox("Filter by", [None, "Date", "Trainer", "Class", "Student Name", "Module Name"])
-
-            if filter_option == "Date":
-                selected_value = st.date_input("Select Date", min_value=df["Date"].min(), max_value=df["Date"].max())
-                df = df[df["Date"] == selected_value]
-            elif filter_option == "Trainer":
-                selected_value = st.text_input("Enter Trainer Name")
-                df = df[df["Trainer Name"].str.contains(selected_value, case=False, na=False)]
-            elif filter_option == "Module Name":
-                selected_value = st.text_input("Enter Module Name")
-                df = df[df["Module Name"].str.contains(selected_value, case=False, na=False)]
-            elif filter_option == "Class":
-                selected_value = st.text_input("Enter Class Name")
-                df = df[df["Class Name"].str.contains(selected_value, case=False, na=False)]
-            elif filter_option == "Student Name":
-                selected_value = st.text_input("Enter Student Name")
-                df = df[df["Student ID"].str.contains(selected_value, case=False, na=False)]
-        # Display the filtered DataFrame in Streamlit
+            filter_options = st.multiselect("Filter by", [None, "Date", "Trainer", "Class", "Student ID", "Module Name"])
+            for filter_option in filter_options:
+                if filter_option == "Date":
+                    selected_value = st.date_input("Select Date", min_value=df["Date"].min(), max_value=df["Date"].max())
+                    df = df[df["Date"] == selected_value]
+                elif filter_option == "Trainer":
+                    selected_value = st.text_input("Enter Trainer Name")
+                    df = df[df["Trainer Name"].str.contains(selected_value, case=False, na=False)]
+                elif filter_option == "Module Name":
+                    selected_value = st.text_input("Enter Module Name")
+                    df = df[df["Module Name"].str.contains(selected_value, case=False, na=False)]
+                elif filter_option == "Class":
+                    selected_value = st.text_input("Enter Class Name")
+                    df = df[df["Class Name"].str.contains(selected_value, case=False, na=False)]
+                elif filter_option == "Student ID":
+                    selected_value = st.text_input("Enter Student ID")
+                    df = df[df["Student ID"].str.contains(selected_value, case=False, na=False)]
+            # Display the filtered DataFrame in Streamlit
         st.write(df)
 
     if selected_option == "Edit Class Details":
