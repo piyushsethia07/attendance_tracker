@@ -211,3 +211,51 @@ def calculate_break_hours(status):
     else:
         # Handle unknown status
         return 0.0  #
+    
+def query_database(student_name, class_name, trainer_name, module_name):
+    try:
+        # Query the database based on the provided criteria
+        student_class = session.query(StudentClass).filter_by(
+            student_id=student_name,
+            class_name=class_name,
+            trainer_name=trainer_name,
+            module_name=module_name
+        ).first()
+        
+        return student_class
+    except Exception as e:
+        return None
+
+# Function to update data in the database
+def update_data_in_database(
+    student_class,
+    new_notes,
+    new_morning_break_status,
+    new_lunch_break_status,
+    new_tea_break_status,
+    new_final_session_status,
+):
+    try:
+        if student_class:
+            
+
+            # Update the fields in the student_class object
+            student_class.notes = new_notes
+            student_class.morning_break_status = new_morning_break_status
+            student_class.morning_break_hours = calculate_break_hours(new_morning_break_status)
+            student_class.lunch_break_status = new_lunch_break_status
+            student_class.lunch_break_hours = calculate_break_hours(new_lunch_break_status)
+            student_class.tea_break_status = new_tea_break_status
+            student_class.tea_break_hours = calculate_break_hours(new_tea_break_status)
+            student_class.final_session_status = new_final_session_status
+            student_class.final_session_hours = calculate_break_hours(new_final_session_status)
+            student_class.total_class_hours = student_class.morning_break_hours + student_class.lunch_break_hours + student_class.tea_break_hours + student_class.final_session_hours
+
+            # Commit the changes to the database
+            session.commit()
+
+            return ("Data updated successfully.")
+        else:
+            return ("Data not found for the provided input.")
+    except Exception as e:
+        return (f"Error updating data in the database: {str(e)}")
